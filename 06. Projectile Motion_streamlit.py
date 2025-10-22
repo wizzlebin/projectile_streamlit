@@ -1,23 +1,18 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Oct 21 15:27:36 2025
-
-@author: pushk
-"""
-
 # projectile_app.py
 import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
+import time
 
 g = 9.81
 
+# --- Streamlit Page Setup ---
 st.set_page_config(page_title="Projectile Simulator", layout="centered")
-st.title("🎯 Projectile Motion Simulator")
+st.title("🎯 Projectile Motion Simulator (Animated)")
 
-st.markdown("Use the sidebar to add projectiles and adjust parameters.")
+st.markdown("Use the sidebar to add projectiles and adjust parameters, then click **Start Animation** below.")
 
-# --- sidebar inputs ---
+# --- Sidebar Inputs ---
 n_proj = st.sidebar.number_input("Number of projectiles", min_value=1, max_value=6, value=2, step=1)
 
 projectiles = []
@@ -28,50 +23,65 @@ for i in range(int(n_proj)):
     h0 = st.sidebar.slider(f"Start Height (m) - {i+1}", 0, 100, 0, key=f"h{i}")
     projectiles.append((v, ang, h0))
 
-# --- plotting area ---
-fig, ax = plt.subplots(figsize=(8, 5))
-ax.set_facecolor("white")
+# --- Compute max time and distances for scaling ---
+t_flights = []
+x_max = 0
+y_max = 0
 
-colors = plt.cm.get_cmap('tab10', int(n_proj))
-
-x_max_guess = 1.0
-y_max_guess = 1.0
-
-for i, (v, ang_deg, h0) in enumerate(projectiles):
+for (v, ang_deg, h0) in projectiles:
     ang = np.radians(ang_deg)
-
-    # compute time of flight (positive root)
-    # solve h0 + v*sin(ang)*t - 0.5*g*t^2 = 0
     b = v * np.sin(ang)
     disc = b**2 + 2*g*h0
     t_f = (b + np.sqrt(disc)) / g
-
-    t = np.linspace(0, t_f, 300)
-    x = v * np.cos(ang) * t
-    y = h0 + v * np.sin(ang) * t - 0.5 * g * t**2
-    y = np.maximum(y, 0)
-
-    ax.plot(x, y, color=colors(i), lw=2, label=f"v={v}, θ={ang_deg}°, h={h0}")
-    # mark landing and max height
+    t_flights.append(t_f)
     x_land = v * np.cos(ang) * t_f
-    ax.scatter([x_land], [0], color=colors(i))
-    # max height
-    t_h = v * np.sin(ang) / g
-    y_h = h0 + v * np.sin(ang) * t_h - 0.5 * g * t_h**2
-    ax.scatter([v * np.cos(ang) * t_h], [y_h], color=colors(i), marker="^")
-    x_max_guess = max(x_max_guess, x_land)
-    y_max_guess = max(y_max_guess, np.max(y))
+    x_max = max(x_max, x_land)
+    y_peak = h0 + (v*np.sin(ang))**2 / (2*g)
+    y_max = max(y_max, y_peak)
 
-ax.axhline(0, color='k', linestyle='--', linewidth=0.7)
-ax.set_xlim(0, x_max_guess * 1.15)
-ax.set_ylim(0, y_max_guess * 1.15)
+max_t = max(t_flights)
+colors = plt.cm.get_cmap('tab10', int(n_proj))
+
+# --- Create figure ---
+fig, ax = plt.subplots(figsize=(8, 5))
+ax.set_xlim(0, x_max * 1.1)
+ax.set_ylim(0, y_max * 1.2)
 ax.set_xlabel("Horizontal distance (m)")
 ax.set_ylabel("Height (m)")
-ax.set_title("Projectile Trajectories")
-ax.legend(loc='upper right', fontsize='small')
+ax.set_title("Animated Projectile Motion")
 ax.grid(alpha=0.3)
 
-st.pyplot(fig)
+# draw platforms for different start heights
+for _, _, h0 in projectiles:
+    ax.axhline(h0, color="gray", linestyle="--", lw=0.5)
+
+points = []
+for i in range(int(n_proj)):
+    (ln,) = ax.plot([], [], "o", color=colors(i), label=f"Proj {i+1}")
+    points.append(ln)
+ax.legend()
+
+# --- Animation control ---
+animate_btn = st.button("▶️ Start Animation")
+
+if animate_btn:
+    placeholder = st.empty()
+    n_frames = 120
+    for frame in range(n_frames + 1):
+        t = (frame / n_frames) * max_t
+
+        # clear previous lines
+        for i, (v, ang_deg, h0) in enumerate(projectiles):
+            ang = np.radians(ang_deg)
+            x = v * np.cos(ang) * t
+            y = h0 + v * np.sin(ang) * t - 0.5 * g * t**2
+            if y < 0:
+                y = 0
+            points[i].set_data(x, y)
+
+        # redraw the figure
+        placeholder.pyplot(fig)
+        time.sleep(0.03)
 
 st.markdown("---")
-st.caption("Implemented with Streamlit — modify parameters in the left sidebar.")
+st.caption("Implemented with Streamlit — adjust parameters and click Start Animation.")
