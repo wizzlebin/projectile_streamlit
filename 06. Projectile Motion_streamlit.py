@@ -3,7 +3,8 @@ import streamlit as st
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation, PillowWriter
-import io
+import tempfile
+import os
 
 st.set_page_config(page_title="Projectile Motion Simulator", layout="centered")
 st.title("🎯 Projectile Motion Simulator")
@@ -105,14 +106,17 @@ def update(frame):
 if animate:
     ani = FuncAnimation(fig, update, frames=total_frames, interval=30, blit=True, repeat=False)
 
-    buf = io.BytesIO()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".gif") as tmpfile:
+        temp_filename = tmpfile.name
     try:
-        ani.save(buf, writer=PillowWriter(fps=20))
-        buf.seek(0)
-        st.image(buf, caption="Projectile Motion Animation", use_container_width=True)
+        ani.save(temp_filename, writer=PillowWriter(fps=20))
+        st.image(temp_filename, caption="Projectile Motion Animation", use_container_width=True)
     except Exception as e:
         st.error(f"⚠️ Animation rendering failed: {e}")
         st.pyplot(fig)
+    finally:
+        if os.path.exists(temp_filename):
+            os.remove(temp_filename)
 else:
     st.pyplot(fig)
 
