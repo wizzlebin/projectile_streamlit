@@ -1,4 +1,4 @@
-# projectile_app_plotly_physics_fixed.py
+# projectile_app_plotly_traces_fixed.py
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
@@ -48,16 +48,16 @@ flight_times = []
 
 for i, (v, ang, h0) in enumerate(projectiles):
     tf = flight_time(v, ang, h0)
-    t_vals = np.linspace(0, tf, 200)
+    t_vals = np.linspace(0, tf, 120)
     x_vals = v * np.cos(ang) * t_vals
     y_vals = h0 + v * np.sin(ang) * t_vals - 0.5 * g * t_vals**2
     y_vals = np.maximum(y_vals, 0)
-    trajectories.append((t_vals, x_vals, y_vals))
+    trajectories.append((x_vals, y_vals))
     flight_times.append(tf)
     max_x = max(max_x, x_vals[-1])
     max_y = max(max_y, np.max(y_vals))
 
-    # Faint full trajectory
+    # Faint full trajectory (background)
     fig.add_trace(go.Scatter(
         x=x_vals,
         y=y_vals,
@@ -66,59 +66,67 @@ for i, (v, ang, h0) in enumerate(projectiles):
         name=f"Path {i+1}"
     ))
 
+    # Dynamic trace (will grow)
+    fig.add_trace(go.Scatter(
+        x=[x_vals[0]],
+        y=[y_vals[0]],
+        mode="lines",
+        line=dict(color=colors[i % len(colors)], width=3),
+        showlegend=False
+    ))
+
+    # Moving marker (projectile)
+    fig.add_trace(go.Scatter(
+        x=[x_vals[0]],
+        y=[y_vals[0]],
+        mode="markers",
+        marker=dict(size=10, color=colors[i % len(colors)], line=dict(color="white", width=1)),
+        showlegend=False
+    ))
+
 # -----------------------------
-# Build animation frames (time-synced)
+# Animation frames
 # -----------------------------
-n_frames = 120
-t_max = max(flight_times)
+n_frames = 100
 frames = []
+t_max = max(flight_times)
 
 for f_idx in range(n_frames):
-    t = f_idx / (n_frames - 1) * t_max  # normalized time
     frame_data = []
-    for i, (t_vals, x_vals, y_vals) in enumerate(trajectories):
-        # find projectile position at this global time
-        if t > t_vals[-1]:
-            x = x_vals[-1]
-            y = 0
-        else:
-            x = np.interp(t, t_vals, x_vals)
-            y = np.interp(t, t_vals, y_vals)
+    for i, (x_vals, y_vals) in enumerate(trajectories):
+        idx = min(int(f_idx / n_frames * (len(x_vals) - 1)), len(x_vals) - 1)
 
-        # Trace line up to this time
-        mask = t_vals <= t
+        # Growing line
         frame_data.append(go.Scatter(
-            x=x_vals[mask],
-            y=y_vals[mask],
+            x=x_vals[:idx + 1],
+            y=y_vals[:idx + 1],
             mode="lines",
             line=dict(color=colors[i % len(colors)], width=3),
             showlegend=False
         ))
-
-        # Moving marker
+        # Marker
         frame_data.append(go.Scatter(
-            x=[x],
-            y=[y],
+            x=[x_vals[idx]],
+            y=[y_vals[idx]],
             mode="markers",
             marker=dict(size=10, color=colors[i % len(colors)], line=dict(color="white", width=1)),
             showlegend=False
         ))
-
     frames.append(go.Frame(data=frame_data, name=f"frame{f_idx}"))
 
 fig.frames = frames
 
 # -----------------------------
-# Layout (dark mode + play/pause)
+# Layout (dark mode + Play/Pause)
 # -----------------------------
 fig.update_layout(
-    xaxis=dict(title="Horizontal Distance (m)", range=[0, max_x * 1.1], gridcolor="gray"),
-    yaxis=dict(title="Vertical Height (m)", range=[0, max_y * 1.2], gridcolor="gray"),
+    xaxis=dict(title="Horizontal Distance (m)", range=[0, max_x * 1.1], showgrid=True, gridcolor="gray"),
+    yaxis=dict(title="Vertical Height (m)", range=[0, max_y * 1.2], showgrid=True, gridcolor="gray"),
     plot_bgcolor="black",
     paper_bgcolor="black",
     font=dict(color="white"),
     title={
-        "text": "🎯 Projectile Motion (Real-Time Physics Animation)",
+        "text": "🎯 Projectile Motion (Real-Time Animation)",
         "font": {"color": "#FFD700", "size": 22},
         "x": 0.5,
         "xanchor": "center"
@@ -141,7 +149,7 @@ fig.update_layout(
 )
 
 # -----------------------------
-# Show graph
+# Display
 # -----------------------------
 st.plotly_chart(fig, use_container_width=True)
-st.caption("✨ Each projectile now follows correct physics and lands exactly on the ground.")
+st.caption("✨ Each projectile leaves a real-time trail as it moves through the air.")
