@@ -103,7 +103,9 @@ fig.update_layout(
         "type": "buttons",
         "direction": "left",
         "x": 0.1, "y": -0.15,
-        "showactive": False,
+        "showactive": True,
+        "bgcolor": "#222",  # <-- apply here (not inside button)
+        "font": {"color": "white", "size": 14},
         "buttons": [{
             "label": "▶️ Play / ⏸ Pause",
             "method": "animate",
@@ -115,16 +117,7 @@ fig.update_layout(
                     "frame": {"duration": 50, "redraw": True},
                     "transition": {"duration": 0}
                 }
-            ],
-            "args2": [
-                [None],
-                {
-                    "mode": "immediate",
-                    "frame": {"duration": 0, "redraw": False}
-                }
-            ],
-            "bgcolor": "#222",
-            "font": {"color": "white", "size": 14}
+            ]
         }]
     }]
 )
