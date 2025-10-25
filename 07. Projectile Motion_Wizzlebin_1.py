@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 st.set_page_config(page_title="Projectile Motion Simulator", layout="centered")
 st.title("🎯 Projectile Motion Simulator (Real-Time Plotly Animation)")
 st.markdown(
-    "<h1 style='color:#00FFB2;'>🎯 Projectile Motion Simulator (Real-Time Plotly Animation)</h1>",
+    "<h1 style='color:#000000;'>🎯 Projectile Motion Simulator (Real-Time Plotly Animation)</h1>",
     unsafe_allow_html=True
 )
 
