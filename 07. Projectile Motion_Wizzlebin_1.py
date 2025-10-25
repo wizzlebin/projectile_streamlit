@@ -5,10 +5,7 @@ import plotly.graph_objects as go
 
 st.set_page_config(page_title="Projectile Motion Simulator", layout="centered")
 st.title("🎯 Projectile Motion Simulator (Real-Time Plotly Animation)")
-st.markdown(
-    "<h1 style='color:#000000;'>🎯 Projectile Motion Simulator (Real-Time Plotly Animation)</h1>",
-    unsafe_allow_html=True
-)
+
 
 
 g = 9.81
@@ -115,7 +112,7 @@ fig.update_layout(
         "x": 0.1, "y": -0.15,
         "showactive": True,
         "bgcolor": "#222",  # <-- apply here (not inside button)
-        "font": {"color": "white", "size": 14},
+        "font": {"color": "black", "size": 14},
         "buttons": [{
             "label": "▶️ Play / ⏸ Pause",
             "method": "animate",
