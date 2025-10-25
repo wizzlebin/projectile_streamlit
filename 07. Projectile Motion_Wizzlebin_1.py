@@ -103,7 +103,12 @@ fig.update_layout(
     plot_bgcolor="black",
     paper_bgcolor="black",
     font=dict(color="white"),
-    title="Projectile Motion (Real-Time Animation)",
+    title={
+        "text": "🎯 Projectile Motion (Real-Time Animation)",
+        "font": {"color": "#FFD700", "size": 24},  # 👈 change this color
+        "x": 0.5,  # center title
+        "xanchor": "center"
+    },
     updatemenus=[{
         "type": "buttons",
         "direction": "left",
