@@ -5,7 +5,7 @@ import plotly.graph_objects as go
 
 st.set_page_config(page_title="Projectile Motion Simulator", layout="centered")
 st.title("🎯 Projectile Motion Simulator (Real-Time Plotly Animation)")
-st.markdown("Use sliders in the sidebar to adjust projectile parameters, then click **Play** to animate in real time!")
+st.markdown("Use sliders in the sidebar to adjust projectile parameters, then click **Play ▶️** to start animation!")
 
 g = 9.81
 
@@ -25,7 +25,7 @@ for i in range(int(n_proj)):
 animate = st.sidebar.button("🎬 Show Animation")
 
 # -----------------------------
-# Physics functions
+# Physics helper
 # -----------------------------
 def flight_time(v, theta, h0):
     b = v * np.sin(theta)
@@ -33,12 +33,11 @@ def flight_time(v, theta, h0):
     return (b + np.sqrt(disc)) / g
 
 # -----------------------------
-# Generate figure
+# Plotly animation setup
 # -----------------------------
 if animate:
     fig = go.Figure()
     colors = ["red", "lime", "orange", "cyan", "magenta"]
-
     max_x, max_y = 0, 0
     trajectories = []
     frames = []
@@ -51,35 +50,43 @@ if animate:
         x_vals = v * np.cos(th) * t_vals
         y_vals = h0 + v * np.sin(th) * t_vals - 0.5 * g * t_vals**2
         y_vals = np.maximum(y_vals, 0)
-
         trajectories.append((x_vals, y_vals))
         max_x = max(max_x, x_vals[-1])
         max_y = max(max_y, np.max(y_vals))
 
-        # Static trace (path)
+        # Full trajectory line (static)
         fig.add_trace(go.Scatter(
-            x=x_vals, y=y_vals, mode="lines", line=dict(color=colors[i % len(colors)], width=2),
+            x=x_vals, y=y_vals,
+            mode="lines",
+            line=dict(color=colors[i % len(colors)], width=2, dash="solid"),
             name=f"Projectile {i+1} ({ang_deg}°)"
         ))
 
-    # Animation frames (moving markers)
+    # Frames (moving points + growing trace)
     num_frames = 100
-    for frame_idx in range(num_frames):
+    for f_idx in range(num_frames):
         frame_data = []
         for i, (x_vals, y_vals) in enumerate(trajectories):
-            if frame_idx < len(x_vals):
-                frame_data.append(
-                    go.Scatter(
-                        x=[x_vals[frame_idx]],
-                        y=[y_vals[frame_idx]],
-                        mode="markers",
-                        marker=dict(color=colors[i % len(colors)], size=10),
-                        name=f"Projectile {i+1}"
-                    )
-                )
-        frames.append(go.Frame(data=frame_data, name=str(frame_idx)))
+            if f_idx < len(x_vals):
+                # Show trace up to current point
+                frame_data.append(go.Scatter(
+                    x=x_vals[:f_idx+1],
+                    y=y_vals[:f_idx+1],
+                    mode="lines",
+                    line=dict(color=colors[i % len(colors)], width=2),
+                    showlegend=False
+                ))
+                # Show moving point
+                frame_data.append(go.Scatter(
+                    x=[x_vals[f_idx]],
+                    y=[y_vals[f_idx]],
+                    mode="markers",
+                    marker=dict(color=colors[i % len(colors)], size=10),
+                    showlegend=False
+                ))
+        frames.append(go.Frame(data=frame_data, name=str(f_idx)))
 
-    # Layout & buttons
+    # Layout and single toggle button
     fig.frames = frames
     fig.update_layout(
         xaxis=dict(title="Horizontal Distance (m)", range=[0, max_x * 1.1]),
@@ -87,30 +94,40 @@ if animate:
         plot_bgcolor="black",
         paper_bgcolor="black",
         font=dict(color="white"),
-        title="Projectile Motion Animation (Real-Time)",
+        title="Projectile Motion (Real-Time Animation)",
         updatemenus=[{
             "type": "buttons",
-            "showactive": False,
-            "buttons": [
-                {"label": "▶️ Play", "method": "animate",
-                 "args": [None, {"frame": {"duration": 50, "redraw": True}, "fromcurrent": True}]},
-                {"label": "⏸ Pause", "method": "animate",
-                 "args": [[None], {"mode": "immediate", "frame": {"duration": 0, "redraw": False}}]}
-            ]
+            "direction": "left",
+            "x": 0.1, "y": -0.15,
+            "showactive": True,
+            "buttons": [{
+                "label": "▶️ Play / ⏸ Pause",
+                "method": "animate",
+                "args": [
+                    None,
+                    {
+                        "fromcurrent": True,
+                        "mode": "immediate",
+                        "frame": {"duration": 50, "redraw": True},
+                        "transition": {"duration": 0}
+                    }
+                ],
+            }]
         }]
     )
 
-    # Initial frame (all start points)
+    # Initial markers (start points)
     fig.add_trace(go.Scatter(
         x=[p[0][0] for p in trajectories],
         y=[p[1][0] for p in trajectories],
         mode="markers",
-        marker=dict(size=10, color=colors[:len(trajectories)])
+        marker=dict(size=10, color=colors[:len(trajectories)]),
+        name="Start Points"
     ))
 
     st.plotly_chart(fig, use_container_width=True)
 
 else:
-    st.info("Adjust projectile parameters in the sidebar and click **Show Animation** to start.")
+    st.info("Adjust parameters in the sidebar and click **Show Animation** to start.")
 
-st.caption("✨ Uses Plotly for real-time browser-side animation (no GIFs, instant playback).")
+st.caption("✨ Uses Plotly for real-time, browser-side animation with live traces and a single play/pause toggle.")
