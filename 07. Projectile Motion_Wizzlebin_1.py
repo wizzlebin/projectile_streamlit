@@ -1,4 +1,4 @@
-# projectile_app_plotly_fixed.py
+# projectile_app_plotly_traces_fixed.py
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
@@ -29,7 +29,7 @@ for i in range(int(n_proj)):
     projectiles.append((v, np.radians(ang), h0))
 
 # -----------------------------
-# Helper
+# Helper function
 # -----------------------------
 def flight_time(v, theta, h0):
     b = v * np.sin(theta)
@@ -48,7 +48,7 @@ flight_times = []
 
 for i, (v, ang, h0) in enumerate(projectiles):
     tf = flight_time(v, ang, h0)
-    t_vals = np.linspace(0, tf, 150)
+    t_vals = np.linspace(0, tf, 120)
     x_vals = v * np.cos(ang) * t_vals
     y_vals = h0 + v * np.sin(ang) * t_vals - 0.5 * g * t_vals**2
     y_vals = np.maximum(y_vals, 0)
@@ -57,86 +57,8 @@ for i, (v, ang, h0) in enumerate(projectiles):
     max_x = max(max_x, x_vals[-1])
     max_y = max(max_y, np.max(y_vals))
 
-    # Static trajectory path
+    # Faint full trajectory (background)
     fig.add_trace(go.Scatter(
         x=x_vals,
         y=y_vals,
         mode="lines",
-        line=dict(color=colors[i % len(colors)], width=3),
-        name=f"Projectile {i+1}"
-    ))
-
-    # Initial marker (will be animated)
-    fig.add_trace(go.Scatter(
-        x=[x_vals[0]],
-        y=[y_vals[0]],
-        mode="markers",
-        marker=dict(size=10, color=colors[i % len(colors)]),
-        name=f"Marker {i+1}",
-        showlegend=False
-    ))
-
-# -----------------------------
-# Animation frames (only move markers)
-# -----------------------------
-n_frames = 80
-frames = []
-t_max = max(flight_times)
-
-for k in range(n_frames):
-    frame_data = []
-    for i, (v, ang, h0) in enumerate(projectiles):
-        tf = flight_times[i]
-        t = min(k / n_frames * t_max, tf)
-        x = v * np.cos(ang) * t
-        y = h0 + v * np.sin(ang) * t - 0.5 * g * t**2
-        y = max(y, 0)
-        # Each frame moves marker i (2*i+1)
-        frame_data.append(go.Scatter(
-            x=[x],
-            y=[y],
-            mode="markers",
-            marker=dict(size=10, color=colors[i % len(colors)]),
-            showlegend=False
-        ))
-    frames.append(go.Frame(data=frame_data, name=f"frame{k}"))
-
-fig.frames = frames
-
-# -----------------------------
-# Layout with working Play/Pause button
-# -----------------------------
-fig.update_layout(
-    xaxis=dict(title="Horizontal Distance (m)", range=[0, max_x * 1.1], showgrid=True, gridcolor="gray"),
-    yaxis=dict(title="Vertical Height (m)", range=[0, max_y * 1.2], showgrid=True, gridcolor="gray"),
-    plot_bgcolor="black",
-    paper_bgcolor="black",
-    font=dict(color="white"),
-    title={
-        "text": "🎯 Projectile Motion (Real-Time Animation)",
-        "font": {"color": "#FFD700", "size": 22},
-        "x": 0.5,
-        "xanchor": "center"
-    },
-    updatemenus=[{
-        "type": "buttons",
-        "direction": "left",
-        "x": 0.1, "y": -0.15,
-        "showactive": True,
-        "bgcolor": "#333",
-        "font": {"color": "white"},
-        "buttons": [{
-            "label": "▶️ Play / ⏸ Pause",
-            "method": "animate",
-            "args": [None, {"frame": {"duration": 50, "redraw": True}, "fromcurrent": True}]
-        }]
-    }],
-    showlegend=True,
-    margin=dict(l=60, r=30, t=80, b=60)
-)
-
-# -----------------------------
-# Display plot
-# -----------------------------
-st.plotly_chart(fig, use_container_width=True)
-st.caption("✨ Adjust sliders to instantly regenerate real-time projectile animation.")
