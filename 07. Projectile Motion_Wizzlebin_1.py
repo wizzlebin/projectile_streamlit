@@ -105,7 +105,7 @@ fig.update_layout(
         "x": 0.1, "y": -0.15,
         "showactive": True,
         "bgcolor": "#222",  # <-- apply here (not inside button)
-        "font": {"color": "white", "size": 14},
+        "font": {"color": "black", "size": 14},
         "buttons": [{
             "label": "▶️ Play / ⏸ Pause",
             "method": "animate",
