@@ -62,3 +62,94 @@ for i, (v, ang, h0) in enumerate(projectiles):
         x=x_vals,
         y=y_vals,
         mode="lines",
+        line=dict(color=colors[i % len(colors)], width=1, dash="dot"),
+        name=f"Path {i+1}"
+    ))
+
+    # Dynamic trace (will grow)
+    fig.add_trace(go.Scatter(
+        x=[x_vals[0]],
+        y=[y_vals[0]],
+        mode="lines",
+        line=dict(color=colors[i % len(colors)], width=3),
+        showlegend=False
+    ))
+
+    # Moving marker (projectile)
+    fig.add_trace(go.Scatter(
+        x=[x_vals[0]],
+        y=[y_vals[0]],
+        mode="markers",
+        marker=dict(size=10, color=colors[i % len(colors)], line=dict(color="white", width=1)),
+        showlegend=False
+    ))
+
+# -----------------------------
+# Animation frames
+# -----------------------------
+n_frames = 100
+frames = []
+t_max = max(flight_times)
+
+for f_idx in range(n_frames):
+    frame_data = []
+    for i, (x_vals, y_vals) in enumerate(trajectories):
+        idx = min(int(f_idx / n_frames * (len(x_vals) - 1)), len(x_vals) - 1)
+
+        # Growing line
+        frame_data.append(go.Scatter(
+            x=x_vals[:idx + 1],
+            y=y_vals[:idx + 1],
+            mode="lines",
+            line=dict(color=colors[i % len(colors)], width=3),
+            showlegend=False
+        ))
+        # Marker
+        frame_data.append(go.Scatter(
+            x=[x_vals[idx]],
+            y=[y_vals[idx]],
+            mode="markers",
+            marker=dict(size=10, color=colors[i % len(colors)], line=dict(color="white", width=1)),
+            showlegend=False
+        ))
+    frames.append(go.Frame(data=frame_data, name=f"frame{f_idx}"))
+
+fig.frames = frames
+
+# -----------------------------
+# Layout (dark mode + Play/Pause)
+# -----------------------------
+fig.update_layout(
+    xaxis=dict(title="Horizontal Distance (m)", range=[0, max_x * 1.1], showgrid=True, gridcolor="gray"),
+    yaxis=dict(title="Vertical Height (m)", range=[0, max_y * 1.2], showgrid=True, gridcolor="gray"),
+    plot_bgcolor="black",
+    paper_bgcolor="black",
+    font=dict(color="white"),
+    title={
+        "text": "🎯 Projectile Motion (Real-Time Animation)",
+        "font": {"color": "#FFD700", "size": 22},
+        "x": 0.5,
+        "xanchor": "center"
+    },
+    updatemenus=[{
+        "type": "buttons",
+        "direction": "left",
+        "x": 0.1, "y": -0.15,
+        "showactive": True,
+        "bgcolor": "#333",
+        "font": {"color": "white"},
+        "buttons": [{
+            "label": "▶️ Play / ⏸ Pause",
+            "method": "animate",
+            "args": [None, {"frame": {"duration": 50, "redraw": True}, "fromcurrent": True}]
+        }]
+    }],
+    showlegend=True,
+    margin=dict(l=60, r=30, t=80, b=60)
+)
+
+# -----------------------------
+# Display
+# -----------------------------
+st.plotly_chart(fig, use_container_width=True)
+st.caption("✨ Each projectile leaves a real-time trail as it moves through the air.")
