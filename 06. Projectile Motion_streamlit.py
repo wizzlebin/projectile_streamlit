@@ -189,5 +189,12 @@ fig.update_layout(
 # -----------------------------
 # Display
 # -----------------------------
-st.plotly_chart(fig, use_container_width=True,config={"displayModeBar": False})
+st.plotly_chart(
+    fig,
+    use_container_width=True,
+    config={
+        "displayModeBar": False,   # hides toolbar
+        "staticPlot": True         # disables zoom, pan, drag, etc.
+    }
+)
 st.caption("✨ Each projectile leaves a real-time trail as it moves through the air.")
