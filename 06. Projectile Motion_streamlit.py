@@ -24,14 +24,9 @@ n_proj = st.sidebar.number_input("Number of projectiles", 1, 5, 1)
 projectiles = []
 for i in range(int(n_proj)):
     st.sidebar.markdown(f"**Projectile {i+1}**")
-    
-    col1, col2 = st.sidebar.columns(2)
-    with col1:
-        v = st.slider(f"Velocity (m/s)", 5, 120, 50, key=f"v{i}")
-    with col2:
-        ang = st.slider(f"Angle (°)", 0, 90, 45, key=f"a{i}")
-    
-    h0 = st.sidebar.slider(f"Start Height (m)", 0, 100, 0, key=f"h{i}")
+    v = st.sidebar.slider(f"Velocity (m/s) : {i+1}", 5, 120, 50, key=f"v{i}")
+    ang = st.sidebar.slider(f"Angle (°) : {i+1}", 0, 90, 45, key=f"a{i}")
+    h0 = st.sidebar.slider(f"Start Height (m) : {i+1}", 0, 100, 0, key=f"h{i}")
     projectiles.append((v, np.radians(ang), h0))
 # -----------------------------
 # Helper function
