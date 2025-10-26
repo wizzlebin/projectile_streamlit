@@ -6,7 +6,7 @@ import plotly.graph_objects as go
 # -----------------------------
 # Streamlit setup
 # -----------------------------
-st.set_page_config(page_title="Projectile Motion Simulator", layout="wide")
+st.set_page_config(page_title="Projectile Motion Simulator", layout="centered")
 st.markdown(
     "<h1 style='color:#000000; text-shadow:1px 1px 3px black;'>🎯 Projectile Motion Simulator </h1>",
     unsafe_allow_html=True
